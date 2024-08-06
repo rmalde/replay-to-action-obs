@@ -22,7 +22,6 @@ setup(
         "scipy",
         "pandas",
         "pyarrow",
-        "zipfile",
         "rlgym[all]>=2.0.0rc0",
         "python-ballchasing",
         "rlgym-tools @ git+https://github.com/RLGym/rlgym-tools.git@v2",

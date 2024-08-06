@@ -5,6 +5,9 @@ ACTION_SPACE = 90
 
 class InverseLookupAct:
     def __init__(self, bins=None):
+        self.ACTION_LEN = 1 # public variable
+
+        
         if bins is None:
             self.bins = [(-1, 0, 1)] * 5
         elif isinstance(bins[0], (float, int)):
@@ -62,6 +65,12 @@ class InverseLookupAct:
         # [ 1 -1  0  0  0  0  1  0]
         # (0.0, -1.0, -1.0, -1.0, -1.0, 0.0, 1.0, 0.0)
 
+    def get_possible_actions(self) -> np.ndarray:
+        possible_actions = np.zeros((ACTION_SPACE, 8))
+        for i, action in enumerate(self._lookup_table):
+            possible_actions[i] = action
+        return possible_actions
+
     def round_actions(self, action: np.ndarray) -> np.ndarray:
         # throttle, steer, pitch, yaw, roll
         bins = np.array([-0.25, 0.25])
@@ -94,12 +103,9 @@ class InverseLookupAct:
 
         return action
 
-    def parse_actions(self, action=np.ndarray) -> int:
-        try:
+    def parse_actions(self, action: np.ndarray, round=False) -> int:
+        if round:
             action = self.round_actions(action)
-        except Exception as e:
-            print(action)
-            quit()
         return self._inverse_lookup_table[tuple(action)]
     
     def __repr__(self) -> str:
