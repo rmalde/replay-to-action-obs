@@ -4,9 +4,18 @@ from tqdm.rich import tqdm
 
 from rlgym_tools.replays.convert import ReplayFrame, get_valid_action_options
 
-from replay_to_action_obs.factories import SingleFrameObs, InverseLookupAct, ContinuousAct
+from replay_to_action_obs.factories import (
+    SingleFrameObs,
+    InverseLookupAct,
+    ContinuousAct,
+)
 
-TICK_SKIP_RATIO = 1 # 8 rlgym ticks per 4 replay ticks
+TICK_SKIP_RATIO = 1  # 8 rlgym ticks per 4 replay ticks
+
+obs_builder = SingleFrameObs()
+action_parser = InverseLookupAct()
+possible_actions = action_parser.get_possible_actions()
+
 
 def rlgym_frames_to_action_obs(
     frames: List[ReplayFrame],
@@ -16,11 +25,6 @@ def rlgym_frames_to_action_obs(
     action: torch.Tensor of shape (n, 1), where n is the number of frames
     obs: torch.Tensor of shape (n, len_obs), where n is the number of frames
     """
-    
-    obs_builder = SingleFrameObs()
-    action_parser = InverseLookupAct()
-    # possible_actions = action_parser.get_possible_actions()
-    # action_parser = ContinuousAct()
 
     agent_ids = list(frames[0].state.cars.keys())
     n_frames = len(frames)
@@ -34,17 +38,18 @@ def rlgym_frames_to_action_obs(
             action = frame.actions[agent_id]
 
             if len(action.shape) == 2:
-                action = action[0]  # take the first action bc it's repeated tick_skip times 
-            # try:
-            #     mask, is_optimal = get_valid_action_options(frame.state.cars[agent_id], action, possible_actions)
-            # except Exception as e:
-            #     print(e)
-            #     print(action)
-            #     quit()
-            
+                action = action[
+                    0
+                ]  # take the first action bc it's repeated tick_skip times
+
             obs[i][frame_idx] = obs_builder.build_obs(agent_id, frame.state)
-            # action = possible_actions[mask][0]
-            actions[i][frame_idx] = action_parser.parse_actions(action, round=True)
+            mask, is_optimal = get_valid_action_options(
+                frame.state.cars[agent_id], action, possible_actions
+            )
+            idx = np.linalg.norm(action - possible_actions[mask], axis=1).argmin()
+            action = possible_actions[mask][idx]
+
+            actions[i][frame_idx] = action_parser.parse_actions(action, round=False)
     return actions, obs
 
 

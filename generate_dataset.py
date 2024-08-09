@@ -5,13 +5,12 @@ import os
 
 from rlgym_tools.replays.convert import ReplayFrame
 
-from replay_to_action_obs.factories import (
-    SingleFrameObs,
-    InverseLookupAct,
-    ACTION_SPACE,
-    OBS_SPACE,
+from replay_to_action_obs.factories import SingleFrameObs, InverseLookupAct
+from replay_to_action_obs.data import (
+    download_replays,
+    replay_to_rlgym_frames,
+    rlgym_frames_to_action_obs,
 )
-from replay_to_action_obs.data import download_replays, replay_to_rlgym_frames
 from replay_to_action_obs.data.util import zip_dataset
 import argparse
 
@@ -29,10 +28,18 @@ def make_dirs(dataset_dir: str) -> None:
     return dataset_dir, replay_dir, actions_dir, obs_dir
 
 
-def gen_dataset(dataset_dir, count: int = 2, verbose: bool = False) -> None:
+def gen_dataset(
+    dataset_dir,
+    count: int = 2,
+    use_downloaded_replays: bool = False,
+    verbose: bool = False,
+) -> None:
     dataset_dir, replay_dir, actions_dir, obs_dir = make_dirs(dataset_dir)
 
-    ids = download_replays(replay_dir=replay_dir, count=count, verbose=verbose)
+    if use_downloaded_replays:
+        ids = [f.split(".")[0] for f in os.listdir(replay_dir) if f.endswith(".replay")]
+    else:
+        ids = download_replays(replay_dir=replay_dir, count=count, verbose=verbose)
 
     obs_builder = SingleFrameObs()
     action_parser = InverseLookupAct()
@@ -52,23 +59,9 @@ def gen_dataset(dataset_dir, count: int = 2, verbose: bool = False) -> None:
             print("Skipping...")
             continue
 
+        actions, obs = rlgym_frames_to_action_obs(frames)
+
         agent_ids = list(frames[0].state.cars.keys())
-        n_agents = len(agent_ids)
-        n_frames = len(frames)
-        len_obs = len(obs_builder.build_obs(agent_ids[0], frames[0].state))
-
-        actions = [np.zeros((n_frames, 1)) for _ in agent_ids]
-        obs = [np.zeros((n_frames, len_obs)) for _ in agent_ids]
-
-        for frame_idx, frame in enumerate(frames):
-            for i, agent_id in enumerate(agent_ids):
-                action = frame.actions[agent_id]
-                if len(action.shape) == 2:
-                    # take the first action bc it's repeated tick_skip times
-                    action = action[0]
-                obs[i][frame_idx] = obs_builder.build_obs(agent_id, frame.state)
-                actions[i][frame_idx] = action_parser.parse_actions(action)
-
         for i in range(len(agent_ids)):
             np.save(
                 os.path.join(actions_dir, f"{idx:05}.npy"),
@@ -95,8 +88,22 @@ def gen_dataset(dataset_dir, count: int = 2, verbose: bool = False) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate dataset")
-    parser.add_argument("--count", type=int, default=4, help="Number of replays to process")
+    # choose one or the other
+    parser.add_argument(
+        "--count", type=int, default=4, help="Number of replays to process"
+    )
+    parser.add_argument(
+        "--use-downloaded-replays",
+        action="store_true",
+        default=False,
+        help="Use already downloaded replays",
+    )
     args = parser.parse_args()
 
-    DATASET_NAME = "ssl-1v1-100"
-    gen_dataset(os.path.join("dataset", DATASET_NAME), count=args.count, verbose=True)
+    DATASET_NAME = "ssl-1v1-1000"
+    gen_dataset(
+        os.path.join("dataset", DATASET_NAME),
+        count=args.count,
+        use_downloaded_replays=args.use_downloaded_replays,
+        verbose=True,
+    )
