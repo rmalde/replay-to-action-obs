@@ -6,13 +6,15 @@ from rlgym_tools.replays.convert import ReplayFrame, get_valid_action_options
 
 from replay_to_action_obs.factories import (
     SingleFrameObs,
+    SingleFrameTrigObs,
     InverseLookupAct,
     ContinuousAct,
 )
 
 TICK_SKIP_RATIO = 1  # 8 rlgym ticks per 4 replay ticks
 
-obs_builder = SingleFrameObs()
+# obs_builder = SingleFrameObs()
+obs_builder = SingleFrameTrigObs()
 action_parser = InverseLookupAct()
 possible_actions = action_parser.get_possible_actions()
 
