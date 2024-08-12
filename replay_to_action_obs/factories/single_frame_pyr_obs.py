@@ -9,10 +9,10 @@ from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.api import AgentID
 
-OBS_SPACE = 99 # This is wrong, I'm not sure what it's supposed to be
+OBS_SPACE = 99  # This is wrong, I'm not sure what it's supposed to be
 
 
-class SingleFrameTrigObs:
+class SingleFramePyrObs:
     POS_STD = (
         2300  # If you read this and wonder why, ping Rangler in the dead of night.
     )
@@ -85,17 +85,6 @@ class SingleFrameTrigObs:
 
         ball_distance = np.linalg.norm(rel_pos)
 
-        forward_unit = physics.forward / np.linalg.norm(physics.forward)
-        up_unit = physics.up / np.linalg.norm(physics.up)
-        left_unit = physics.left / np.linalg.norm(physics.left)
-        ball_in_car_frame = np.array(
-            [
-                np.dot(rel_pos, forward_unit),
-                np.dot(rel_pos, left_unit),
-                np.dot(rel_pos, up_unit),
-            ]
-        )
-
         obs.extend(
             [
                 rel_pos / self.POS_STD,
@@ -106,12 +95,11 @@ class SingleFrameTrigObs:
                 physics.left,
                 physics.linear_velocity / self.POS_STD,
                 physics.angular_velocity / self.ANG_STD,
-                ball_in_car_frame,
                 [
+                    ball_distance,
                     physics.pitch,
                     physics.yaw,
                     physics.roll,
-                    ball_distance / self.POS_STD,
                     car.boost_amount,
                     int(car.on_ground),
                     int(car.can_flip),
