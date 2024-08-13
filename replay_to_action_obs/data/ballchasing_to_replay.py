@@ -16,7 +16,9 @@ from ballchasing.constants import Playlist, Rank, Season, MatchResult
 
 load_dotenv()
 BALLCHASING_API_KEY = os.getenv("BALLCHASING_API_KEY")
-api = ballchasing.Api(BALLCHASING_API_KEY)
+api = None
+if BALLCHASING_API_KEY is not None:
+    api = ballchasing.Api(BALLCHASING_API_KEY)
 
 
 def get_replay_dicts(count: int = 2) -> Iterator[dict]:
