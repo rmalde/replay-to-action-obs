@@ -43,13 +43,13 @@ def process_replay(replay_id, replay_idx, replay_dir, actions_dir, obs_dir):
 
     data = []
     for j in range(len(agent_ids)):
-        action_path = os.path.join(actions_dir, f"{replay_idx}_{j}.npy")
-        obs_path = os.path.join(obs_dir, f"{replay_idx}_{j}.npy")
+        action_path = os.path.join(actions_dir, f"{replay_idx:07}_{j}.npz")
+        obs_path = os.path.join(obs_dir, f"{replay_idx:07}_{j}.npz")
         np.savez_compressed(action_path, array=actions[j])
         np.savez_compressed(obs_path, array=obs[j])
         data.append((replay_id, j, action_path, obs_path))
     
-    return data
+    return replay_id
 
 def gen_dataset(
     dataset_dir,
@@ -66,21 +66,15 @@ def gen_dataset(
 
     print("Processing replays...")
 
-    with ProcessPoolExecutor(max_workers=32) as executor:
+    with ProcessPoolExecutor(max_workers=4) as executor:
         futures = [
             executor.submit(process_replay, replay_id, replay_idx, replay_dir, actions_dir, obs_dir)
             for replay_idx, replay_id in enumerate(ids)
         ]
-        results = [future.result() for future in tqdm(futures) if future.result() is not None]
-    
-    # Flatten the list of results and generate the index to replay ID mapping
-    idx_to_replay_id = [item for sublist in results for item in sublist]
-
-    # save idx to replay id mapping as csv
-    with open(os.path.join(dataset_dir, "idx_to_replay_id.csv"), "w") as f:
-        f.write("idx,replay_id\n")
-        for idx, replay_id in enumerate(idx_to_replay_id):
-            f.write(f"{idx},{replay_id}\n")
+        with tqdm(total=len(futures), desc="Processing replays") as pbar:
+            for future in futures:
+                result = future.result()
+                pbar.update(1)
 
     print("Zipping dataset...")
     zip_dataset(dataset_dir)
