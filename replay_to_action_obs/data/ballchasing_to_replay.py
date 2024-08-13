@@ -21,28 +21,34 @@ if BALLCHASING_API_KEY is not None:
     api = ballchasing.Api(BALLCHASING_API_KEY)
 
 
-def get_replay_dicts(count: int = 2) -> Iterator[dict]:
+def get_replay_dicts(count: int = 2, min_rank=None, max_rank=None) -> Iterator[dict]:
+    if min_rank is None:
+        min_rank = Rank.SUPERSONIC_LEGEND
+    if max_rank is None:
+        max_rank = Rank.SUPERSONIC_LEGEND
     return api.get_replays(
         # player_name="retals",
         playlist=Playlist.RANKED_DUELS,
         season=Season.SEASON_13_FTP,
-        min_rank=Rank.SUPERSONIC_LEGEND,
-        max_rank=Rank.SUPERSONIC_LEGEND,
+        min_rank=min_rank,
+        max_rank=max_rank,
         count=count,
     )
 
 
 def download_replays(
-    replay_dir: str, count: int = 2, verbose: bool = False
+    replay_dir: str, count: int = 2, min_rank=None, max_rank=None, verbose: bool = False
 ) -> List[str]:
-    print("Downloading replays...")
+    print(f"Downloading replays between {min_rank} and {max_rank} to {replay_dir}")
 
     if not os.path.exists(replay_dir):
         os.makedirs(replay_dir)
 
     ids = []
     with tqdm(total=count) as pbar:
-        for replay in get_replay_dicts(count=count):
+        for replay in get_replay_dicts(
+            count=count, min_rank=min_rank, max_rank=max_rank
+        ):
             if verbose:
                 orange_players = ", ".join(
                     [player["name"] for player in replay["orange"]["players"]]
