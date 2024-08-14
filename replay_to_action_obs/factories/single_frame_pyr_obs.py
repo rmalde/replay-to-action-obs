@@ -135,10 +135,10 @@ class SingleFramePyrObs:
 92,93,94: opp_linear_velocity.x,y,z
 95,96,97: opp_angular_velocity.x,y,z
 98,99,100: opp.pyr
-102: opp_boost
-103: opp_on_ground
-104: opp_can_flip
-105: opp_is_demoed
+101: opp_boost
+102: opp_on_ground
+103: opp_can_flip
+104: opp_is_demoed
 105,106,107: player_opp_rel_pos.x,y,z
 108,109,110: player_opp_rel_vel.x,y,z
 """

@@ -92,8 +92,8 @@ def gen_dataset(
     ranks = []
     if use_downloaded_replays:
         # in replays dir there are subdirs for each rank
-        ranks = [d for d in os.listdir(replay_dir) if os.path.isdir(os.path.join(replay_dir, d))]
-        for rank in ranks:
+        rank_dirs = [d for d in os.listdir(replay_dir) if os.path.isdir(os.path.join(replay_dir, d))]
+        for rank in rank_dirs:
             for f in os.listdir(os.path.join(replay_dir, rank)):
                 if f.endswith(".replay"):
                     replay_paths.append(os.path.join(replay_dir, rank, f))
@@ -104,12 +104,13 @@ def gen_dataset(
             ids = download_replays(replay_dir=rank_dir, count=count, min_rank=min_rank, max_rank=max_rank, verbose=verbose)
             replay_paths.extend([os.path.join(rank_dir, f"{replay_id}.replay") for replay_id in ids])
             ranks.extend([rank] * len(ids))
+
             
     print("Processing replays...")
     filename_to_rank = {}
     with ProcessPoolExecutor(max_workers=16) as executor:
         futures = []
-        for i, (replay_path, rank) in enumerate(zip(replay_paths, rank)):
+        for i, (replay_path, rank) in enumerate(zip(replay_paths, ranks)):
             futures.append(executor.submit(process_replay, replay_path, i, actions_dir, obs_dir, rank))
         with tqdm(total=len(futures), desc="Processing replays") as pbar:
             for future in futures:
