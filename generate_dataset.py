@@ -96,7 +96,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    DATASET_NAME = "ssl-1v1-full"
+    DATASET_NAME = "ssl-1v1-40-pyr"
     gen_dataset(
         os.path.join("dataset", DATASET_NAME),
         count=args.count,

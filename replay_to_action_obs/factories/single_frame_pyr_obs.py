@@ -9,7 +9,7 @@ from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import Car, GameState, PhysicsObject
 from rlgym.api import AgentID
 
-OBS_SPACE = 99  # This is wrong, I'm not sure what it's supposed to be
+OBS_SPACE = 111  # This is wrong, I'm not sure what it's supposed to be
 
 
 class SingleFramePyrObs:
@@ -83,8 +83,6 @@ class SingleFramePyrObs:
         rel_pos = ball.position - physics.position
         rel_vel = ball.linear_velocity - physics.linear_velocity
 
-        ball_distance = np.linalg.norm(rel_pos)
-
         obs.extend(
             [
                 rel_pos / self.POS_STD,
@@ -96,7 +94,6 @@ class SingleFramePyrObs:
                 physics.linear_velocity / self.POS_STD,
                 physics.angular_velocity / self.ANG_STD,
                 [
-                    ball_distance,
                     physics.pitch,
                     physics.yaw,
                     physics.roll,
@@ -109,3 +106,39 @@ class SingleFramePyrObs:
         )
 
         return physics
+
+
+"""
+0,1,2: ball_position.x,y,z
+3,4,5: ball_linear_velocity.x,y,z
+6,7,8: ball_angular_velocity.x,y,z
+9 - 42: pads,
+43,44,45: player_rel_pos.x,y,z
+46,47,48: player_rel_vel.x,y,z
+49,50,51: player_pos.x,y,z
+52,53,54: player_forward.x,y,z
+55,56,57: player_up.x,y,z
+58,59,60: player_left.x,y,z
+61,62,63: player_linear_velocity.x,y,z
+64,65,66: player_angular_velocity.x,y,z
+67,68,69: player.pyr
+70: player_boost
+71: player_on_ground
+72: player_can_flip
+73: player_is_demoed
+74,75,76: opp_rel_pos.x,y,z
+77,78,79: opp_rel_vel.x,y,z
+80,81,82: opp_pos.x,y,z
+83,84,85: opp_forward.x,y,z
+86,87,88: opp_up.x,y,z
+89,90,91: opp_left.x,y,z
+92,93,94: opp_linear_velocity.x,y,z
+95,96,97: opp_angular_velocity.x,y,z
+98,99,100: opp.pyr
+102: opp_boost
+103: opp_on_ground
+104: opp_can_flip
+105: opp_is_demoed
+105,106,107: player_opp_rel_pos.x,y,z
+108,109,110: player_opp_rel_vel.x,y,z
+"""
